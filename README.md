@@ -4,7 +4,7 @@ A World of Warcraft Retail addon that turns missing mounts and battle pets into 
 
 ## Current version
 
-**v0.2.0**
+**v0.2.1 development**
 
 The current working vertical slice supports Timeless Isle and includes:
 
@@ -17,6 +17,8 @@ The current working vertical slice supports Timeless Isle and includes:
 - automatic rerouting after a collection
 - temporary skip/reroute behavior
 - a "Why?" panel explaining planner assumptions
+- a draggable minimap map button: left-click opens the planner, right-click opens help
+- an in-game command/help panel so slash commands are optional
 
 The addon does **not** automate movement, combat, looting, pet battles, or protected gameplay.
 
@@ -48,8 +50,19 @@ Then in game:
 /reload
 ```
 
+## Minimap button
+
+A small map icon appears around the minimap:
+
+- **Left-click:** open the expedition planner
+- **Right-click:** open commands/help
+- **Drag:** reposition it around the minimap
+
+You can use the addon without memorizing slash commands.
+
 ## Commands
 
+- `/ce` - open the time-budget planner
 - `/ce plan` - open the time-budget planner
 - `/ce start 30` - start a 30-minute route
 - `/ce start 60` - start a 60-minute route
@@ -61,6 +74,7 @@ Then in game:
 - `/ce show` - reopen the tracker
 - `/ce stop` - stop and clear the addon waypoint
 - `/ce reset` - reset the current session
+- `/ce help` - open the in-game help panel
 
 ## Planner model
 
