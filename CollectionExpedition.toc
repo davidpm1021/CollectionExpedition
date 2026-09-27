@@ -1,0 +1,10 @@
+## Interface: 120100
+## Title: Collection Expedition
+## Notes: Personalized mount and battle-pet collection expeditions.
+## Author: Dave + ChatGPT
+## Version: 0.2.0
+## SavedVariables: CollectionExpeditionDB
+
+Data.lua
+Core.lua
+UI.lua
