@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.1 - development
+
+- Added a draggable minimap map button.
+- Left-clicking the minimap button opens the expedition planner.
+- Right-clicking the minimap button opens an in-game help/commands panel.
+- Added a tooltip showing button controls and the current target.
+- `/ce` with no arguments now opens the planner.
+- Added `/ce help`.
+
+
 ## 0.2.0
 
 - Added 30, 60, and 120 minute expedition planning.
