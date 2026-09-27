@@ -1,6 +1,6 @@
 local ADDON_NAME, CE = ...
 
-CE.VERSION = "0.2.0"
+CE.VERSION = "0.2.1"
 CE.state = CE.state or {}
 
 local DEFAULT_STATE = {
@@ -458,8 +458,12 @@ end
 function CE:HandleSlash(msg)
     local command, arg1, arg2 = string.match(string.lower(msg or ""), "^(%S*)%s*(%S*)%s*(.-)$")
 
-    if command == "" or command == "help" then
-        Print("Commands: /ce plan, /ce start [30|60|120|all], /ce stop, /ce next, /ce status, /ce show, /ce why, /ce reset")
+    if command == "" then
+        self:OpenPlanner()
+    elseif command == "help" then
+        if self.UI then
+            self.UI:ToggleHelp(true)
+        end
     elseif command == "plan" then
         self:OpenPlanner()
     elseif command == "start" then
@@ -523,7 +527,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         if CE.UI then
             CE.UI:Initialize()
         end
-        Print("v" .. CE.VERSION .. " loaded. Try |cffffffff/ce plan|r")
+        Print("v" .. CE.VERSION .. " loaded. Click the minimap map icon or type |cffffffff/ce|r to plan an expedition.")
     elseif event == "NEW_MOUNT_ADDED" then
         local mountID = ...
         local current = CE:GetCurrentObjective()
