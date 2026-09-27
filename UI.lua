@@ -6,6 +6,8 @@ local UI = CE.UI
 local tracker
 local planner
 local whyPanel
+local helpPanel
+local minimapButton
 
 local function SavePosition(frame)
     if not CE.db then return end
@@ -27,6 +29,49 @@ local function ApplyBackdrop(frame, r, g, b)
     })
     frame:SetBackdropColor(0.04, 0.05, 0.07, 0.96)
     frame:SetBackdropBorderColor(r or 0.25, g or 0.9, b or 0.65, 0.95)
+end
+
+local function Atan2(y, x)
+    if math.atan2 then
+        return math.atan2(y, x)
+    end
+    if x > 0 then
+        return math.atan(y / x)
+    elseif x < 0 and y >= 0 then
+        return math.atan(y / x) + math.pi
+    elseif x < 0 and y < 0 then
+        return math.atan(y / x) - math.pi
+    elseif x == 0 and y > 0 then
+        return math.pi / 2
+    elseif x == 0 and y < 0 then
+        return -math.pi / 2
+    end
+    return 0
+end
+
+local function PositionMinimapButton()
+    if not minimapButton or not Minimap then return end
+    local angle = (CE.db and CE.db.minimapAngle) or 225
+    local radians = math.rad(angle)
+    local radius = 80
+    minimapButton:ClearAllPoints()
+    minimapButton:SetPoint("CENTER", Minimap, "CENTER", math.cos(radians) * radius, math.sin(radians) * radius)
+end
+
+local function UpdateMinimapButtonDrag()
+    if not minimapButton or not Minimap then return end
+    local mx, my = Minimap:GetCenter()
+    if not mx or not my then return end
+
+    local scale = Minimap:GetEffectiveScale()
+    local cx, cy = GetCursorPosition()
+    cx, cy = cx / scale, cy / scale
+
+    local angle = math.deg(Atan2(cy - my, cx - mx))
+    if CE.db then
+        CE.db.minimapAngle = angle
+    end
+    PositionMinimapButton()
 end
 
 function UI:Initialize()
@@ -184,6 +229,106 @@ function UI:Initialize()
     planner.closeButton:SetPoint("TOPRIGHT", 4, 4)
 
     planner:Hide()
+
+    helpPanel = CreateFrame("Frame", "CollectionExpeditionHelpPanel", UIParent, "BackdropTemplate")
+    helpPanel:SetSize(430, 390)
+    helpPanel:SetPoint("CENTER", UIParent, "CENTER", 0, 20)
+    helpPanel:SetFrameStrata("DIALOG")
+    helpPanel:SetClampedToScreen(true)
+    ApplyBackdrop(helpPanel, 0.35, 0.75, 1.0)
+
+    helpPanel.title = helpPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    helpPanel.title:SetPoint("TOPLEFT", 16, -16)
+    helpPanel.title:SetText("COLLECTION EXPEDITION HELP")
+    helpPanel.title:SetTextColor(0.45, 0.85, 1.0)
+
+    helpPanel.text = helpPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    helpPanel.text:SetPoint("TOPLEFT", 16, -48)
+    helpPanel.text:SetPoint("BOTTOMRIGHT", -16, 16)
+    helpPanel.text:SetJustifyH("LEFT")
+    helpPanel.text:SetJustifyV("TOP")
+    helpPanel.text:SetWordWrap(true)
+    helpPanel.text:SetText(
+        "|cffffffffYou do not need slash commands.|r\n" ..
+        "Left-click the minimap map icon to open the planner.\n" ..
+        "Right-click it to open this help panel. Drag it around the minimap to move it.\n\n" ..
+        "|cff66ccffCommands|r\n" ..
+        "/ce  - open planner\n" ..
+        "/ce plan  - open planner\n" ..
+        "/ce start 30  - start a 30-minute route\n" ..
+        "/ce start 60  - start a 60-minute route\n" ..
+        "/ce start 120  - start a 120-minute route\n" ..
+        "/ce start all  - open-ended route\n" ..
+        "/ce status  - show current target and remaining budget\n" ..
+        "/ce why  - explain the current stop\n" ..
+        "/ce next  - skip this stop and reroute\n" ..
+        "/ce show  - reopen the tracker\n" ..
+        "/ce stop  - stop the expedition and clear its waypoint\n" ..
+        "/ce reset  - reset the current session\n" ..
+        "/ce help  - open this panel"
+    )
+
+    helpPanel.closeButton = CreateFrame("Button", nil, helpPanel, "UIPanelCloseButton")
+    helpPanel.closeButton:SetPoint("TOPRIGHT", 4, 4)
+    helpPanel:Hide()
+
+    if Minimap then
+        minimapButton = CreateFrame("Button", "CollectionExpeditionMinimapButton", Minimap)
+        minimapButton:SetSize(32, 32)
+        minimapButton:SetFrameStrata("MEDIUM")
+        minimapButton:SetFrameLevel(8)
+        minimapButton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        minimapButton:RegisterForDrag("LeftButton")
+
+        local border = minimapButton:CreateTexture(nil, "OVERLAY")
+        border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+        border:SetSize(54, 54)
+        border:SetPoint("CENTER", 10, -10)
+
+        local icon = minimapButton:CreateTexture(nil, "BACKGROUND")
+        icon:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
+        icon:SetSize(20, 20)
+        icon:SetPoint("CENTER")
+        icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        minimapButton:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+
+        minimapButton:SetScript("OnClick", function(_, button)
+            if button == "RightButton" then
+                UI:ToggleHelp()
+            else
+                UI:ShowPlanner()
+            end
+        end)
+
+        minimapButton:SetScript("OnDragStart", function(self)
+            self:SetScript("OnUpdate", UpdateMinimapButtonDrag)
+        end)
+        minimapButton:SetScript("OnDragStop", function(self)
+            self:SetScript("OnUpdate", nil)
+            UpdateMinimapButtonDrag()
+        end)
+
+        minimapButton:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+            GameTooltip:AddLine("Collection Expedition", 0.3, 1.0, 0.7)
+            GameTooltip:AddLine("Left-click: Plan an expedition", 1, 1, 1)
+            GameTooltip:AddLine("Right-click: Commands & help", 1, 1, 1)
+            GameTooltip:AddLine("Drag: Move this button", 0.8, 0.8, 0.8)
+
+            local current = CE:GetCurrentObjective()
+            if current then
+                GameTooltip:AddLine(" ")
+                GameTooltip:AddLine("Current: " .. CE:GetObjectiveName(current), 1.0, 0.82, 0.35)
+            end
+            GameTooltip:Show()
+        end)
+        minimapButton:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+
+        PositionMinimapButton()
+    end
 end
 
 function UI:ShowPlanner()
@@ -198,6 +343,17 @@ end
 function UI:ShowTracker()
     if not tracker then self:Initialize() end
     tracker:Show()
+end
+
+function UI:ToggleHelp(forceShow)
+    if not helpPanel then self:Initialize() end
+    if forceShow == true then
+        helpPanel:Show()
+    elseif helpPanel:IsShown() then
+        helpPanel:Hide()
+    else
+        helpPanel:Show()
+    end
 end
 
 function UI:ToggleWhy(forceShow)
