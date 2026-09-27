@@ -2,7 +2,7 @@
 ## Title: Collection Expedition
 ## Notes: Personalized mount and battle-pet collection expeditions.
 ## Author: Dave + ChatGPT
-## Version: 0.2.0
+## Version: 0.2.1
 ## SavedVariables: CollectionExpeditionDB
 
 Data.lua
