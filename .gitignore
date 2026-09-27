@@ -1,0 +1,14 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# Optional local tooling
+.vscode/
+.idea/
+
+# WoW generated/local state should never live in the addon repo
+WTF/
+Logs/
+Cache/
